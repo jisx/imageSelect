@@ -1,22 +1,24 @@
 package com.jisx.view.image.select;
 
 import android.content.Context;
-import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DecodeFormat;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
+import com.bumptech.glide.request.RequestOptions;
 
 import java.util.List;
 
 /**
  * Created by jsx on 2019/2/13.
  */
-class GridImageAdapter<T extends ImageModel> extends BaseAdapter {
-
-    ModeType mModeType;
-
+class GridImageAdapter extends BaseAdapter {
     enum Type {
         IMAGE(0), ADD(1);
 
@@ -26,7 +28,7 @@ class GridImageAdapter<T extends ImageModel> extends BaseAdapter {
             this.index = i;
         }
 
-        public static Type getType(int index){
+        public static Type getType(int index) {
             for (Type type : values()) {
                 if (type.getIndex() == index) {
                     return type;
@@ -43,11 +45,19 @@ class GridImageAdapter<T extends ImageModel> extends BaseAdapter {
 
     Context mContext;
 
-    private List<T> mImageModelList;
+    ModeType mModeType;
+
+    ImageView.ScaleType mScaleType;
+
+    private List<ImageModel> mImageModelList;
 
     private OperationClick mOperationClick;
 
-    public GridImageAdapter(Context context, List<T> imageModelList) {
+    int radius;
+
+    View addView;
+
+    public GridImageAdapter(Context context, List<ImageModel> imageModelList) {
         mContext = context;
         mImageModelList = imageModelList;
     }
@@ -107,20 +117,26 @@ class GridImageAdapter<T extends ImageModel> extends BaseAdapter {
 
         switch (type) {
             case IMAGE:
-                viewHolder.mImageView.setImageBitmap(BitmapFactory.decodeFile(mImageModelList.get(position).getLocalPath()));
+                if (mScaleType != null) {
+                    viewHolder.mImageView.setScaleType(mScaleType);
+                }
+
+                RoundedCorners roundedCorners = new RoundedCorners(radius);
+                RequestOptions options = RequestOptions.bitmapTransform(roundedCorners).format(DecodeFormat.PREFER_ARGB_8888);
+                Glide.with(mContext).asBitmap().apply(options).load(mImageModelList.get(position).getFilePath()).into(viewHolder.mImageView);
                 viewHolder.mImageView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        mOperationClick.showClick(mImageModelList.get(position),position);
+                        mOperationClick.showClick(mImageModelList.get(position), position);
                     }
                 });
                 viewHolder.mDeleteView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        mOperationClick.deleteClick(mImageModelList.get(position),position);
+                        mOperationClick.deleteClick(mImageModelList.get(position), position);
                     }
                 });
-                switch (mModeType){
+                switch (mModeType) {
                     case SHOW:
                         viewHolder.mDeleteView.setVisibility(View.GONE);
                         break;
@@ -130,27 +146,49 @@ class GridImageAdapter<T extends ImageModel> extends BaseAdapter {
                 }
                 break;
             case ADD:
-                viewHolder.mImageView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        mOperationClick.addClick(mImageModelList.get(position),position);
-                    }
-                });
+                if (addView != null) {
+                    viewHolder.mRlContent.removeAllViews();
+                    viewHolder.mRlContent.addView(addView);
+                    addView.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            mOperationClick.addClick(mImageModelList.get(position), position);
+                        }
+                    });
+                } else {
+                    viewHolder.mImageView.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            mOperationClick.addClick(mImageModelList.get(position), position);
+                        }
+                    });
+                }
                 break;
         }
 
         return convertView;
     }
 
-    public List<T> getImageList() {
-        return mImageModelList;
-    }
-
     protected void setModeType(ModeType modeType) {
         mModeType = modeType;
     }
 
+    public void setRadius(int radius) {
+        this.radius = radius;
+    }
+
+    public void setAddView(View view) {
+        addView = view;
+    }
+
+    public void setScaleType(ImageView.ScaleType type) {
+        this.mScaleType = type;
+    }
+
+
     private static class ViewHolder {
+
+        RelativeLayout mRlContent;
 
         ImageView mImageView;
 
@@ -159,6 +197,7 @@ class GridImageAdapter<T extends ImageModel> extends BaseAdapter {
         public ViewHolder(View convertView) {
             mImageView = convertView.findViewById(R.id.iv_img);
             mDeleteView = convertView.findViewById(R.id.iv_delete);
+            mRlContent = convertView.findViewById(R.id.rl_content);
         }
     }
 

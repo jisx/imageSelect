@@ -3,9 +3,12 @@ package com.jisx.view.image.select;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.GridView;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
 import java.util.ArrayList;
@@ -28,6 +31,8 @@ public class GridSelectView extends RelativeLayout implements OperationClick {
     ImageModel addImageModel;
 
     List<ImageModel> mModelList;
+
+    ImageClickListener mImageClickListener;
 
     public GridSelectView(Context context) {
         super(context);
@@ -150,7 +155,9 @@ public class GridSelectView extends RelativeLayout implements OperationClick {
 
     @Override
     public void showClick(ImageModel model, int position) {
-
+        if (mImageClickListener != null) {
+            mImageClickListener.imageClick(model.getFilePath());
+        }
     }
 
     public void setMaxLength(int maxLength) {
@@ -164,6 +171,25 @@ public class GridSelectView extends RelativeLayout implements OperationClick {
         mType = type;
         adapter.setModeType(mType);
         checkModelList();
+    }
+
+    public void setAddView(View view) {
+        adapter.setAddView(view);
+        checkModelList();
+    }
+
+    public void setRadius(int dp){
+        adapter.setRadius(dip2px(dp));
+        adapter.notifyDataSetChanged();
+    }
+
+    public void setScaleType(ImageView.ScaleType type){
+        adapter.setScaleType(type);
+        adapter.notifyDataSetChanged();
+    }
+
+    public void setImageClickListener(ImageClickListener imageClickListener) {
+        mImageClickListener = imageClickListener;
     }
 
     public int dip2px(float dpValue) {

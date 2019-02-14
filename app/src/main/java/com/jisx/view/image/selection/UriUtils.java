@@ -1,4 +1,4 @@
-package com.jisx.view.image.select;
+package com.jisx.view.image.selection;
 
 /**
  * Created by jsx on 2019/2/13.
