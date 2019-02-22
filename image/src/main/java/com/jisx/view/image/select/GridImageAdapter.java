@@ -103,14 +103,17 @@ class GridImageAdapter extends BaseAdapter {
                     viewHolder = new ViewHolder(convertView);
                     break;
                 case ADD:
-                    convertView = LayoutInflater.from(mContext).inflate(R.layout.item_grid_image_add, null);
+                    convertView = addView;
                     viewHolder = new ViewHolder(convertView);
                     break;
             }
 
             convertView.setTag(viewHolder);
         } else {
-            if (convertView.getTag() != null && convertView.getTag() instanceof ViewHolder) {
+            if (type == Type.ADD && convertView != addView) {
+                convertView = addView;
+                viewHolder = new ViewHolder(convertView);
+            } else {
                 viewHolder = (ViewHolder) convertView.getTag();
             }
         }
@@ -120,10 +123,14 @@ class GridImageAdapter extends BaseAdapter {
                 if (mScaleType != null) {
                     viewHolder.mImageView.setScaleType(mScaleType);
                 }
+                if (radius > 0) {
+                    RoundedCorners roundedCorners = new RoundedCorners(radius);
+                    RequestOptions options = RequestOptions.bitmapTransform(roundedCorners).format(DecodeFormat.PREFER_ARGB_8888);
+                    Glide.with(mContext).asBitmap().apply(options).load(mImageModelList.get(position).getFilePath()).into(viewHolder.mImageView);
+                } else {
+                    Glide.with(mContext).load(mImageModelList.get(position).getFilePath()).into(viewHolder.mImageView);
+                }
 
-                RoundedCorners roundedCorners = new RoundedCorners(radius);
-                RequestOptions options = RequestOptions.bitmapTransform(roundedCorners).format(DecodeFormat.PREFER_ARGB_8888);
-                Glide.with(mContext).asBitmap().apply(options).load(mImageModelList.get(position).getFilePath()).into(viewHolder.mImageView);
                 viewHolder.mImageView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -146,23 +153,12 @@ class GridImageAdapter extends BaseAdapter {
                 }
                 break;
             case ADD:
-                if (addView != null) {
-                    viewHolder.mRlContent.removeAllViews();
-                    viewHolder.mRlContent.addView(addView);
-                    addView.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            mOperationClick.addClick(mImageModelList.get(position), position);
-                        }
-                    });
-                } else {
-                    viewHolder.mImageView.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            mOperationClick.addClick(mImageModelList.get(position), position);
-                        }
-                    });
-                }
+                convertView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        mOperationClick.addClick(mImageModelList.get(position), position);
+                    }
+                });
                 break;
         }
 
@@ -184,7 +180,6 @@ class GridImageAdapter extends BaseAdapter {
     public void setScaleType(ImageView.ScaleType type) {
         this.mScaleType = type;
     }
-
 
     private static class ViewHolder {
 

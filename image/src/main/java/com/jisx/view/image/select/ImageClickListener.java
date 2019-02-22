@@ -5,8 +5,8 @@ package com.jisx.view.image.select;
  */
 public interface ImageClickListener {
     /**
-     * 优先返回本地路径
-     * @param path
+     * 返回图路径
+     * @param path 路径
      */
     public void imageClick(String path);
 }

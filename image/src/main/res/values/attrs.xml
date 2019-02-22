@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="GridSelectView">
+        <attr name="ModeType" format="enum" >
+            <enum name="edit" value="0"/>
+            <enum name="show" value="1"/>
+        </attr>
+        <attr name="radius" format="integer" />
+        <attr name="maxLength" format="integer" />
+        <attr name="isAutoHeight" format="boolean"/>
+        <attr name="numColumns" format="integer" />
+        <attr name="android:scaleType" />
+        <attr name="layout" format="reference"/>
+        <attr name="android:horizontalSpacing"/>
+        <attr name="android:verticalSpacing"/>
+    </declare-styleable>
+
+</resources>

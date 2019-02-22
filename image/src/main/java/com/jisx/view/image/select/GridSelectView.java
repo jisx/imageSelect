@@ -3,10 +3,11 @@ package com.jisx.view.image.select;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.text.TextUtils;
+import android.content.res.TypedArray;
+import android.graphics.Color;
 import android.util.AttributeSet;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -20,6 +21,18 @@ import java.util.List;
 public class GridSelectView extends RelativeLayout implements OperationClick {
 
     public static final int REQUEST_CODE_IMAGE_SELECT = 201;
+
+    private static final ImageView.ScaleType[] sScaleTypeArray = {
+            ImageView.ScaleType.MATRIX,
+            ImageView.ScaleType.FIT_XY,
+            ImageView.ScaleType.FIT_START,
+            ImageView.ScaleType.FIT_CENTER,
+            ImageView.ScaleType.FIT_END,
+            ImageView.ScaleType.CENTER,
+            ImageView.ScaleType.CENTER_CROP,
+            ImageView.ScaleType.CENTER_INSIDE
+    };
+
     GridView gridView;
 
     GridImageAdapter adapter;
@@ -27,6 +40,19 @@ public class GridSelectView extends RelativeLayout implements OperationClick {
     public int maxLength = 5;
 
     ModeType mType = ModeType.EDIT;
+
+    private int radius;
+
+    private boolean isAutoHeight;
+
+    private int numColumns;
+
+    private int scanTypeIndex;
+
+    private int addViewLayout;
+
+    private int horizontalSpacing;
+    private int verticalSpacing;
 
     ImageModel addImageModel;
 
@@ -36,28 +62,44 @@ public class GridSelectView extends RelativeLayout implements OperationClick {
 
     public GridSelectView(Context context) {
         super(context);
-        init();
+        init(null);
     }
 
     public GridSelectView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init();
+        init(attrs);
     }
 
     public GridSelectView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init();
+        init(attrs);
     }
 
-    private void init() {
+    private void init(AttributeSet attrs) {
         addImageModel = new ImageModel(true);
 
-        gridView = new GridView(getContext());
-        gridView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        gridView.setHorizontalSpacing(dip2px(10));
-        gridView.setVerticalSpacing(dip2px(10));
-        gridView.setNumColumns(3);
+        if (attrs != null) {
+            TypedArray ta = getContext().obtainStyledAttributes(attrs, R.styleable.GridSelectView);
+            int mode = ta.getInt(R.styleable.GridSelectView_ModeType, 0);
+            mType = mode == 0 ? ModeType.EDIT : ModeType.SHOW;
+            radius = ta.getInt(R.styleable.GridSelectView_radius,0);
+            isAutoHeight = ta.getBoolean(R.styleable.GridSelectView_isAutoHeight,false);
+            maxLength = ta.getInt(R.styleable.GridSelectView_maxLength,0);
+            numColumns = ta.getInt(R.styleable.GridSelectView_numColumns,3);
+            horizontalSpacing = ta.getDimensionPixelOffset(R.styleable.GridSelectView_android_horizontalSpacing,0);
+            verticalSpacing = ta.getDimensionPixelOffset(R.styleable.GridSelectView_android_verticalSpacing,0);
+            scanTypeIndex = ta.getInt(R.styleable.GridSelectView_android_scaleType,3);
+            addViewLayout = ta.getResourceId(R.styleable.GridSelectView_layout,R.layout.item_grid_image_add);
+            ta.recycle();
+        }
+        gridView = new AutoHeightGridView(getContext());
+        gridView.setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT));
+        gridView.setHorizontalSpacing(horizontalSpacing);
+        gridView.setVerticalSpacing(verticalSpacing);
+        gridView.setNumColumns(numColumns);
+
         addView(gridView);
+
         initAdapter();
     }
 
@@ -65,8 +107,14 @@ public class GridSelectView extends RelativeLayout implements OperationClick {
         mModelList = new ArrayList<>();
         adapter = new GridImageAdapter(getContext(), mModelList);
 
-        adapter.setOperationClick(this);
+        View view = LayoutInflater.from(getContext()).inflate(addViewLayout, null);
+        adapter.setAddView(view);
+        adapter.setRadius(dip2px(radius));
         adapter.setModeType(mType);
+        adapter.setScaleType(sScaleTypeArray[scanTypeIndex]);
+
+        adapter.setOperationClick(this);
+
 
         switch (mType) {
             case EDIT:
@@ -178,21 +226,47 @@ public class GridSelectView extends RelativeLayout implements OperationClick {
         checkModelList();
     }
 
-    public void setRadius(int dp){
-        adapter.setRadius(dip2px(dp));
+    public void setAddView(int resId) {
+        View view = LayoutInflater.from(getContext()).inflate(resId, null);
+        setAddView(view);
+    }
+
+    public void setRadius(int radius) {
+        this.radius = radius;
+        adapter.setRadius(dip2px(radius));
         adapter.notifyDataSetChanged();
     }
 
-    public void setScaleType(ImageView.ScaleType type){
+    public void setScaleType(ImageView.ScaleType type) {
         adapter.setScaleType(type);
         adapter.notifyDataSetChanged();
+    }
+
+    public void isAutoHeight(boolean isAutoHeight) {
+        isAutoHeight = isAutoHeight;
+        if (isAutoHeight) {
+            gridView.setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT));
+        } else {
+            gridView.setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT));
+        }
     }
 
     public void setImageClickListener(ImageClickListener imageClickListener) {
         mImageClickListener = imageClickListener;
     }
 
-    public int dip2px(float dpValue) {
+    public List<String> getImageList() {
+        List<String> list = new ArrayList<>();
+        for (ImageModel imageModel : mModelList) {
+            if (!imageModel.equals(addImageModel)) {
+                list.add(imageModel.getFilePath());
+            }
+        }
+
+        return list;
+    }
+
+    private int dip2px(float dpValue) {
         final float scale = getContext().getResources().getDisplayMetrics().density;
         return (int) (dpValue * scale + 0.5f);
     }

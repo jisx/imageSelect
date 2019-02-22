@@ -22,15 +22,13 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mGridView = findViewById(R.id.gv_img);
-        mGridView.setMaxLength(5);
-        mGridView.setType(ModeType.EDIT);
-        mGridView.setRadius(10);
-        mGridView.setScaleType(ImageView.ScaleType.FIT_XY);
-        ImageView view = new ImageView(this);
-        view.setLayoutParams(new ViewGroup.LayoutParams(200, 200));
-        view.setBackgroundColor(Color.BLACK);
-        mGridView.setAddView(view);
-        mGridView.addImages("/storage/emulated/0/DCIM/Camera/IMG_20190213_080530.jpg", "/storage/emulated/0/DCIM/Camera/IMG_20190213_080525.jpg");
+//        mGridView.setMaxLength(5);
+//        mGridView.setType(ModeType.EDIT);
+//        mGridView.setRadius(10);
+//        mGridView.setAddView(R.layout.item_add_view);
+//        mGridView.setScaleType(ImageView.ScaleType.FIT_XY);
+//        mGridView.addImages("/storage/emulated/0/DCIM/Camera/IMG_20190213_080530.jpg", "/storage/emulated/0/DCIM/Camera/IMG_20190213_080525.jpg");
+//        mGridView.isAutoHeight(true);
     }
 
     @Override
